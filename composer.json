@@ -1,0 +1,13 @@
+{
+    "name": "rhms/hotel-management",
+    "description": "Room Hotel Management System",
+    "type": "project",
+    "require": {
+        "phpmailer/phpmailer": "^6.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "RHMS\\": "src/"
+        }
+    }
+}

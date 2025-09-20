@@ -1,0 +1,21 @@
+.nav-link {
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+    border-left-color: white;
+}
+
+.nav-link i {
+    margin-right: 0.75rem;
+    width: 20px;
+}

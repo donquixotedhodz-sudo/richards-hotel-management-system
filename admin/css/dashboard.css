@@ -1,0 +1,281 @@
+/* Admin Dashboard Custom Styles */
+:root {
+    --primary-red: #dc3545;
+    --dark-red: #c82333;
+    --sidebar-width: 250px;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar-brand {
+    font-weight: 600;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    position: fixed;
+    top: 76px; /* Account for navbar height */
+    left: 0;
+    height: auto;
+    min-height: calc(100vh - 76px);
+    width: var(--sidebar-width);
+    background: linear-gradient(180deg, var(--primary-red), var(--dark-red));
+    color: white;
+    z-index: 999;
+    transition: all 0.3s ease;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-nav {
+    padding: 1rem 0;
+}
+
+.nav-item {
+    margin: 0.5rem 0;
+}
+
+.nav-link {
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+    border-left-color: white;
+}
+
+.nav-link i {
+    margin-right: 0.75rem;
+    width: 20px;
+}
+
+/* Main Content */
+.main-content {
+    margin-left: var(--sidebar-width);
+    min-height: 100vh;
+    background: #f8f9fa;
+    padding-top: 76px; /* Account for fixed navbar */
+}
+
+.content-header {
+    background: white;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid #dee2e6;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.content-body {
+    padding: 1.5rem 2rem;
+}
+
+.content-section {
+    display: none;
+}
+
+.content-section.active {
+    display: block;
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+/* Bookings Table Styles */
+.table-responsive {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+#bookingsTable {
+    margin-bottom: 0;
+}
+
+#bookingsTable th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    color: #495057;
+    padding: 1rem 0.75rem;
+}
+
+#bookingsTable td {
+    padding: 1rem 0.75rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+#bookingsTable tbody tr:hover {
+    background-color: #f8f9fa;
+    transition: background-color 0.2s ease;
+}
+
+/* Action Buttons */
+.btn-group {
+    gap: 5px;
+    display: flex;
+}
+
+.btn-group .btn {
+    border-radius: 4px !important;
+}
+
+.btn-sm {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Status Badges */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.5rem;
+    border-radius: 6px;
+}
+
+/* Modal Enhancements */
+.modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.modal-title {
+    color: #495057;
+    font-weight: 600;
+}
+
+/* Filter Dropdown */
+#statusFilter {
+    min-width: 120px;
+}
+
+/* Statistics Cards Hover Effect */
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    #bookingsTable {
+        font-size: 0.875rem;
+    }
+    
+    #bookingsTable th,
+    #bookingsTable td {
+        padding: 0.5rem 0.25rem;
+    }
+    
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    
+    .btn-group .btn {
+        margin-right: 0;
+        margin-bottom: 2px;
+    }
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+/* User Profile in Sidebar */
+.user-profile {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-avatar {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+/* Statistics Cards */
+.stat-card {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.stat-icon.bg-primary {
+    background: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+}
+
+.stat-icon.bg-success {
+    background: rgba(25, 135, 84, 0.1);
+    color: #198754;
+}
+
+.stat-icon.bg-warning {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+.stat-icon.bg-info {
+    background: rgba(13, 202, 240, 0.1);
+    color: #0dcaf0;
+}
+
+.stat-icon.bg-danger {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 991.98px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    
+    .sidebar.show {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-left: 0;
+    }
+}
