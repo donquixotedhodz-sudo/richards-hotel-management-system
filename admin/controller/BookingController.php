@@ -27,6 +27,10 @@ try {
             deleteBooking($conn);
             break;
             
+        case 'search':
+            searchBookings($conn);
+            break;
+            
         default:
             throw new Exception('Invalid action');
     }
@@ -45,19 +49,22 @@ function getBooking($conn) {
         throw new Exception('Booking ID is required');
     }
     
+    // Complete query - fetch all data needed for both edit modal and extend time modal
     $stmt = $conn->prepare("
         SELECT 
-            b.*,
-            rt.type_name,
-            rt.description as room_description,
-            r.room_number,
-            u.first_name,
-            u.last_name,
-            u.email as user_email
+            b.id,
+            b.customer_name,
+            b.customer_email,
+            b.customer_phone,
+            b.check_in_datetime,
+            b.check_out_datetime,
+            b.total_price,
+            b.booking_status,
+            b.special_requests,
+            b.duration_hours,
+            rt.type_name
         FROM bookings b
         LEFT JOIN room_types rt ON b.room_type_id = rt.id
-        LEFT JOIN rooms r ON b.room_id = r.id
-        LEFT JOIN users u ON b.user_id = u.id
         WHERE b.id = ?
     ");
     
@@ -83,6 +90,11 @@ function updateBooking($conn) {
     $checkInDateTime = $_POST['check_in_datetime'] ?? '';
     $checkOutDateTime = $_POST['check_out_datetime'] ?? '';
     $specialRequests = trim($_POST['special_requests'] ?? '');
+    
+    // Check if time extension is being applied
+    $extendTime = $_POST['extend_time'] ?? false;
+    $additionalHours = (int)($_POST['additional_hours'] ?? 0);
+    $newTotalPrice = $_POST['new_total_price'] ?? null;
     
     // Validation
     if (!$id) {
@@ -122,32 +134,73 @@ function updateBooking($conn) {
     $durationHours = ($interval->days * 24) + $interval->h + ($interval->i / 60);
     $durationHours = ceil($durationHours); // Round up to nearest hour
     
-    // Update booking
-    $stmt = $conn->prepare("
-        UPDATE bookings SET 
-            customer_name = ?,
-            customer_email = ?,
-            customer_phone = ?,
-            booking_status = ?,
-            check_in_datetime = ?,
-            check_out_datetime = ?,
-            duration_hours = ?,
-            special_requests = ?,
-            updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-    ");
-    
-    $result = $stmt->execute([
-        $customerName,
-        $customerEmail,
-        $customerPhone,
-        $bookingStatus,
-        $checkInDateTime,
-        $checkOutDateTime,
-        $durationHours,
-        $specialRequests,
-        $id
-    ]);
+    // Prepare update query - include total_price if time extension is applied
+    if ($extendTime && $newTotalPrice) {
+        $stmt = $conn->prepare("
+            UPDATE bookings SET 
+                customer_name = ?,
+                customer_email = ?,
+                customer_phone = ?,
+                booking_status = ?,
+                check_in_datetime = ?,
+                check_out_datetime = ?,
+                duration_hours = ?,
+                total_price = ?,
+                special_requests = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ");
+        
+        $result = $stmt->execute([
+            $customerName,
+            $customerEmail,
+            $customerPhone,
+            $bookingStatus,
+            $checkInDateTime,
+            $checkOutDateTime,
+            $durationHours,
+            $newTotalPrice,
+            $specialRequests,
+            $id
+        ]);
+        
+        // Log time extension
+        if ($result && $additionalHours > 0) {
+            $logStmt = $conn->prepare("
+                INSERT INTO booking_logs (booking_id, action, details, created_at) 
+                VALUES (?, 'time_extended', ?, NOW())
+            ");
+            $logDetails = "Extended booking by {$additionalHours} hours. New total: ₱" . number_format($newTotalPrice, 2);
+            $logStmt->execute([$id, $logDetails]);
+        }
+    } else {
+        // Regular update without price change
+        $stmt = $conn->prepare("
+            UPDATE bookings SET 
+                customer_name = ?,
+                customer_email = ?,
+                customer_phone = ?,
+                booking_status = ?,
+                check_in_datetime = ?,
+                check_out_datetime = ?,
+                duration_hours = ?,
+                special_requests = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ");
+        
+        $result = $stmt->execute([
+            $customerName,
+            $customerEmail,
+            $customerPhone,
+            $bookingStatus,
+            $checkInDateTime,
+            $checkOutDateTime,
+            $durationHours,
+            $specialRequests,
+            $id
+        ]);
+    }
     
     if (!$result) {
         throw new Exception('Failed to update booking');
@@ -374,6 +427,46 @@ function deleteBooking($conn) {
     echo json_encode([
         'success' => true,
         'message' => 'Booking deleted successfully'
+    ]);
+}
+
+function searchBookings($conn) {
+    $searchTerm = trim($_GET['term'] ?? '');
+    
+    if (empty($searchTerm)) {
+        throw new Exception('Search term is required');
+    }
+    
+    // Search by booking ID or customer email
+    $stmt = $conn->prepare("
+        SELECT 
+            b.id,
+            b.customer_name,
+            b.customer_email,
+            b.customer_phone,
+            b.check_in_datetime,
+            b.check_out_datetime,
+            b.total_price,
+            b.booking_status,
+            b.duration_hours,
+            rt.type_name,
+            u.username as customer_username
+        FROM bookings b
+        LEFT JOIN room_types rt ON b.room_type_id = rt.id
+        LEFT JOIN users u ON b.user_id = u.id
+        WHERE b.id = ? OR b.customer_email LIKE ?
+        ORDER BY b.created_at DESC
+        LIMIT 20
+    ");
+    
+    $searchPattern = '%' . $searchTerm . '%';
+    $stmt->execute([$searchTerm, $searchPattern]);
+    $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    echo json_encode([
+        'success' => true,
+        'bookings' => $bookings,
+        'message' => count($bookings) . ' booking(s) found'
     ]);
 }
 

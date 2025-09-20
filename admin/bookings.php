@@ -227,7 +227,7 @@ $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
                                     <th class="text-nowrap" style="width: 80px;">Price</th>
                                     <th class="text-nowrap" style="width: 80px;">Status</th>
                                     <th class="text-nowrap d-none d-md-table-cell" style="width: 80px;">Payment</th>
-                                    <th class="text-nowrap" style="width: 120px;">Actions</th>
+                                    <th class="text-center" style="width: 120px;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -317,53 +317,31 @@ $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
                                         <span class="badge <?php echo $payment_class; ?>" style="font-size: 0.7rem;"><?php echo $payment_text; ?></span>
                                     </td>
                                     <td class="text-nowrap" style="padding: 0.375rem 0.5rem;">
-                                        <div class="btn-group-vertical d-md-none" role="group" style="width: 100%;">
+                                        <div class="d-flex justify-content-end gap-1">
+                                            <button onclick="viewBookingDetails(<?php echo $booking['id']; ?>)" class="btn btn-primary btn-xs square-btn border-2" title="View Booking">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button onclick="editBooking(<?php echo $booking['id']; ?>)" class="btn btn-warning btn-xs square-btn border-2" title="Edit Booking">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
                                             <?php if ($booking['booking_status'] == 'pending'): ?>
-                                                <form method="POST" style="display: inline; margin-bottom: 2px;">
+                                                <form method="POST" style="display: inline;">
                                                     <input type="hidden" name="booking_id" value="<?php echo $booking['id']; ?>">
                                                     <input type="hidden" name="action" value="confirm">
-                                                    <button type="submit" class="btn btn-sm btn-outline-success me-1" title="Confirm">
+                                                    <button type="submit" class="btn btn-success btn-xs square-btn border-2" title="Confirm">
                                                         <i class="fas fa-check"></i>
                                                     </button>
                                                 </form>
                                                 <form method="POST" style="display: inline;">
                                                     <input type="hidden" name="booking_id" value="<?php echo $booking['id']; ?>">
                                                     <input type="hidden" name="action" value="cancel">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger me-1" title="Cancel">
+                                                    <button type="submit" class="btn btn-danger btn-xs square-btn border-2" title="Cancel">
                                                         <i class="fas fa-times"></i>
                                                     </button>
                                                 </form>
+                                            <?php elseif ($booking['booking_status'] == 'confirmed'): ?>
+                                               
                                             <?php endif; ?>
-                                            <a href="edit_booking.php?id=<?php echo $booking['id']; ?>" class="btn btn-sm btn-outline-primary me-1" style="margin-bottom: 2px;" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <a href="view_booking.php?id=<?php echo $booking['id']; ?>" class="btn btn-sm btn-outline-info me-1" title="View">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                        </div>
-                                        <div class="btn-group d-none d-md-flex" role="group">
-                                            <?php if ($booking['booking_status'] == 'pending'): ?>
-                                                <form method="POST" style="display: inline;">
-                                                    <input type="hidden" name="booking_id" value="<?php echo $booking['id']; ?>">
-                                                    <input type="hidden" name="action" value="confirm">
-                                                    <button type="submit" class="btn btn-sm btn-outline-success me-1" title="Confirm">
-                                                        <i class="fas fa-check"></i>
-                                                    </button>
-                                                </form>
-                                                <form method="POST" style="display: inline;">
-                                                    <input type="hidden" name="booking_id" value="<?php echo $booking['id']; ?>">
-                                                    <input type="hidden" name="action" value="cancel">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger me-1" title="Cancel">
-                                                        <i class="fas fa-times"></i>
-                                                    </button>
-                                                </form>
-                                            <?php endif; ?>
-                                            <button onclick="editBooking(<?php echo $booking['id']; ?>)" class="btn btn-sm btn-outline-primary me-1" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button onclick="viewBookingDetails(<?php echo $booking['id']; ?>)" class="btn btn-sm btn-outline-info me-1" title="View">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -454,26 +432,105 @@ $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
 
 <!-- View Details Modal -->
 <div class="modal fade" id="viewDetailsModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title"><i class="fas fa-eye me-2"></i>Booking Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="bookingDetailsContent">
-                <!-- Content will be loaded dynamically -->
+            <div class="modal-body p-4" id="bookingDetailsContent">
+                <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Close
+                </button>
             </div>
         </div>
     </div>
+</div>
+
+
+<!-- Notification Container -->
+<div id="notificationContainer" class="position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+    <!-- Notifications will be dynamically added here -->
 </div>
 
 <?php include 'includes/footer.php'; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+// Notification System
+function showNotification(message, type = 'success', duration = 5000) {
+    const notificationContainer = document.getElementById('notificationContainer');
+    const notificationId = 'notification-' + Date.now();
+    
+    // Define notification types and their styles
+    const notificationTypes = {
+        success: {
+            bgClass: 'bg-success',
+            icon: 'fas fa-check-circle',
+            title: 'Success!'
+        },
+        error: {
+            bgClass: 'bg-danger',
+            icon: 'fas fa-exclamation-circle',
+            title: 'Error!'
+        },
+        warning: {
+            bgClass: 'bg-warning',
+            icon: 'fas fa-exclamation-triangle',
+            title: 'Warning!'
+        },
+        info: {
+            bgClass: 'bg-info',
+            icon: 'fas fa-info-circle',
+            title: 'Information'
+        }
+    };
+    
+    const notificationType = notificationTypes[type] || notificationTypes.info;
+    
+    // Create notification element
+    const notificationHTML = `
+        <div id="${notificationId}" class="toast align-items-center text-white ${notificationType.bgClass} border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <div class="d-flex align-items-center">
+                        <i class="${notificationType.icon} me-2"></i>
+                        <div>
+                            <strong>${notificationType.title}</strong>
+                            <div>${message}</div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    `;
+    
+    // Add notification to container
+    notificationContainer.insertAdjacentHTML('beforeend', notificationHTML);
+    
+    // Initialize and show the toast
+    const toastElement = document.getElementById(notificationId);
+    const toast = new bootstrap.Toast(toastElement, {
+        autohide: true,
+        delay: duration
+    });
+    
+    toast.show();
+    
+    // Remove the toast element after it's hidden
+    toastElement.addEventListener('hidden.bs.toast', function() {
+        toastElement.remove();
+    });
+}
+
 // Function to change status filter
 function changeStatus(status) {
     const url = new URL(window.location);
@@ -507,12 +564,12 @@ function editBooking(bookingId) {
                 
                 new bootstrap.Modal(document.getElementById('editBookingModal')).show();
             } else {
-                alert('Error loading booking data: ' + data.message);
+                showNotification('Error loading booking data: ' + data.message, 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error loading booking data');
+            showNotification('Error loading booking data', 'error');
         });
 }
 
@@ -521,6 +578,12 @@ function saveBookingChanges() {
     const formData = new FormData(document.getElementById('editBookingForm'));
     formData.append('action', 'update');
     
+    // Add loading state to save button
+    const saveBtn = document.querySelector('#editBookingModal .btn-danger');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+    
     fetch('controller/BookingController.php', {
         method: 'POST',
         body: formData
@@ -528,15 +591,25 @@ function saveBookingChanges() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('Booking updated successfully!');
-            location.reload();
+            showNotification('Booking updated successfully!', 'success');
+            // Close modal and reload after a short delay
+            bootstrap.Modal.getInstance(document.getElementById('editBookingModal')).hide();
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
         } else {
-            alert('Error updating booking: ' + data.message);
+            showNotification('Error updating booking: ' + data.message, 'error');
+            // Restore button state
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalText;
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error updating booking');
+        showNotification('Error updating booking', 'error');
+        // Restore button state
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalText;
     });
 }
 
@@ -556,6 +629,65 @@ function viewBookingDetails(bookingId) {
             console.error('Error:', error);
             alert('Error loading booking details');
         });
+}
+
+
+// Process time extension
+function processTimeExtension() {
+    const bookingId = document.getElementById('extend_booking_id').value;
+    const extendHours = document.getElementById('extend_hours').value;
+    
+    if (!extendHours || extendHours < 1 || extendHours > 24) {
+        showNotification('Please enter a valid number of hours (1-24)', 'error');
+        return;
+    }
+    
+    // Add loading state to extend button
+    const extendBtn = document.querySelector('#extendTimeModal .btn-primary');
+    const originalText = extendBtn.innerHTML;
+    extendBtn.disabled = true;
+    extendBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Extending...';
+    
+    fetch('controller/ExtendTimeController.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            booking_id: parseInt(bookingId),
+            extend_hours: parseInt(extendHours)
+        })
+    })
+    .then(response => {
+        // Check if response is ok before parsing JSON
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data); // Debug log
+        if (data && data.success === true) {
+            showNotification(data.message || 'Booking extended successfully!', 'success');
+            // Close modal and reload immediately
+            bootstrap.Modal.getInstance(document.getElementById('extendTimeModal')).hide();
+            // Reload the page to show updated booking information
+            location.reload();
+        } else {
+            const errorMessage = data && data.message ? data.message : 'Unknown error occurred';
+            showNotification('Error extending booking: ' + errorMessage, 'error');
+            // Restore button state
+            extendBtn.disabled = false;
+            extendBtn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        console.error('Fetch Error:', error);
+        showNotification('Network error: Unable to extend booking time', 'error');
+        // Restore button state
+        extendBtn.disabled = false;
+        extendBtn.innerHTML = originalText;
+    });
 }
 
 function toggleSidebar() {

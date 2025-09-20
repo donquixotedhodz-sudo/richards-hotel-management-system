@@ -99,12 +99,23 @@ class TimeExtensionController {
                     user_id, 
                     additional_hours, 
                     additional_cost, 
-                    extended_at
-                ) VALUES (?, ?, ?, ?, NOW())
+                    hourly_rate,
+                    previous_checkout, 
+                    new_checkout,
+                    extension_reason
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ");
             
-            // Note: This assumes we'll create a booking_extensions table
-            // For now, we'll skip this and just update the main booking
+            $logStmt->execute([
+                $bookingId, 
+                $currentUser['id'], 
+                $additionalHours, 
+                $additionalCost, 
+                $hourlyRate,
+                $booking['check_out_datetime'],
+                $newCheckOut->format('Y-m-d H:i:s'),
+                'Customer requested time extension'
+            ]);
             
             $this->returnResponse(true, 'Time extended successfully!', [
                 'additional_hours' => $additionalHours,
