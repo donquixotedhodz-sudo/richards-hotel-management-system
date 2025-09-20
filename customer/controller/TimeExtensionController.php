@@ -158,6 +158,87 @@ class TimeExtensionController {
     }
     
     /**
+     * Get booking details for viewing (allows all booking statuses)
+     */
+    public function getBookingForViewing() {
+        SessionManager::requireCustomer();
+        $currentUser = SessionManager::getCurrentUser();
+        
+        if (empty($_GET['booking_id'])) {
+            $this->returnResponse(false, 'Booking ID is required');
+            return;
+        }
+        
+        $bookingId = (int)$_GET['booking_id'];
+        
+        try {
+            $stmt = $this->conn->prepare("
+                SELECT b.*, rt.type_name, rt.description as room_description
+                FROM bookings b
+                LEFT JOIN room_types rt ON b.room_type_id = rt.id
+                WHERE b.id = ? AND (b.user_id = ? OR b.customer_email = ?)
+            ");
+            $stmt->execute([$bookingId, $currentUser['id'], $currentUser['email']]);
+            $booking = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$booking) {
+                $this->returnResponse(false, 'Booking not found');
+                return;
+            }
+            
+            $this->returnResponse(true, 'Booking details retrieved', $booking);
+            
+        } catch (Exception $e) {
+            error_log('Get booking for viewing error: ' . $e->getMessage());
+            $this->returnResponse(false, 'Error retrieving booking details');
+        }
+    }
+
+    /**
+     * Get booking details for editing (allows pending and confirmed bookings)
+     */
+    public function getBookingForEditing() {
+        SessionManager::requireCustomer();
+        $currentUser = SessionManager::getCurrentUser();
+        
+        if (empty($_GET['booking_id'])) {
+            $this->returnResponse(false, 'Booking ID is required');
+            return;
+        }
+        
+        $bookingId = (int)$_GET['booking_id'];
+        
+        try {
+            $stmt = $this->conn->prepare("
+                SELECT b.*, rt.type_name 
+                FROM bookings b
+                LEFT JOIN room_types rt ON b.room_type_id = rt.id
+                WHERE b.id = ? AND (b.user_id = ? OR b.customer_email = ?)
+                AND b.booking_status IN ('pending', 'confirmed')
+            ");
+            $stmt->execute([$bookingId, $currentUser['id'], $currentUser['email']]);
+            $booking = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$booking) {
+                $this->returnResponse(false, 'Booking not found or cannot be edited');
+                return;
+            }
+            
+            // Return booking data in the expected format for the frontend
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'message' => 'Booking details retrieved for editing',
+                'booking' => $booking
+            ]);
+            
+        } catch (Exception $e) {
+            error_log('Get booking for editing error: ' . $e->getMessage());
+            $this->returnResponse(false, 'Error retrieving booking details');
+        }
+    }
+    
+    /**
      * Return JSON response
      */
     private function returnResponse($success, $message, $data = null) {
@@ -177,6 +258,12 @@ if (isset($_GET['action'])) {
     switch ($_GET['action']) {
         case 'get_booking':
             $controller->getBookingForExtension();
+            break;
+        case 'get_booking_for_edit':
+            $controller->getBookingForEditing();
+            break;
+        case 'get_booking_for_view':
+            $controller->getBookingForViewing();
             break;
         case 'extend':
             $controller->extendTime();

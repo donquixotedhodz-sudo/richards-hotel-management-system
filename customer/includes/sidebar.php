@@ -3,19 +3,19 @@
         
         <nav class="sidebar-nav">
             <div class="nav-item">
-                <a href="#" class="nav-link active" onclick="showSection('dashboard')">
+                <a href="dashboard.php" class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'dashboard.php') ? 'active' : ''; ?>">
                     <i class="fas fa-tachometer-alt"></i>
                     Dashboard
                 </a>
             </div>
             <div class="nav-item">
-                <a href="#" class="nav-link" onclick="showSection('bookings')">
-                    <i class="fas fa-calendar-alt"></i>
-                    My Bookings
-                </a>
+                <a href="bookings.php" class="nav-link <?php echo (basename($_SERVER['PHP_SELF']) == 'bookings.php') ? 'active' : ''; ?>">
+                <i class="fas fa-calendar-alt"></i>
+                <span>My Bookings</span>
+            </a>
             </div>
             <div class="nav-item">
-                <a href="#" class="nav-link" onclick="showSection('profile')">
+                <a href="profile.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) === 'profile.php' ? 'active' : ''; ?>">
                     <i class="fas fa-user-cog"></i>
                     Profile
                 </a>
@@ -23,12 +23,12 @@
         </nav>
         
         <div class="user-profile mt-auto">
-            <div class="text-center mb-3">
-                <div class="user-avatar mx-auto mb-2">
+            <div class="text-center mb-4">
+                <div class="user-avatar mx-auto mb-3">
                     <i class="fas fa-user"></i>
                 </div>
-                <div class="fw-bold"><?php echo htmlspecialchars($currentUser['name']); ?></div>
-                <small class="opacity-75 d-block"><?php echo htmlspecialchars($currentUser['email']); ?></small>
+                <div class="fw-bold fs-6"><?php echo htmlspecialchars($currentUser['name']); ?></div>
+                
             </div>
             <a href="../centralized-login/controller/LoginController.php?action=logout" class="btn btn-outline-light btn-sm w-100">
                 <i class="fas fa-sign-out-alt me-2"></i>Logout

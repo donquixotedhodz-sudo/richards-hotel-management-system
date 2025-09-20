@@ -55,9 +55,10 @@ body {
 
 .nav-link:hover,
 .nav-link.active {
-    color: white;
-    background: rgba(255, 255, 255, 0.1);
+    color: white !important;
+    background: rgba(255, 255, 255, 0.15);
     border-left-color: white;
+    font-weight: 500;
 }
 
 .nav-link i {
@@ -96,21 +97,21 @@ body {
 
 /* User Profile in Sidebar */
 .user-profile {
-    padding: 1rem 1.5rem;
+    padding: 1.5rem 1.5rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     margin-top: auto;
 }
 
 .user-avatar {
-    width: 50px;
-    height: 50px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    font-size: 1.2rem;
+    font-size: 1.8rem;
 }
 
 .user-profile small {

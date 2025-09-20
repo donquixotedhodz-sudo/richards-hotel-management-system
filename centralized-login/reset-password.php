@@ -114,19 +114,15 @@ $resetEmail = $_SESSION['reset_email'];
                         <div class="password-strength" id="passwordStrength"></div>
                         <div class="password-requirements" id="passwordRequirements">
                             <div class="requirement unmet" id="req-length">
-                                <i class="fas fa-times"></i>
                                 At least 8 characters
                             </div>
                             <div class="requirement unmet" id="req-uppercase">
-                                <i class="fas fa-times"></i>
                                 One uppercase letter
                             </div>
                             <div class="requirement unmet" id="req-lowercase">
-                                <i class="fas fa-times"></i>
                                 One lowercase letter
                             </div>
                             <div class="requirement unmet" id="req-number">
-                                <i class="fas fa-times"></i>
                                 One number
                             </div>
                         </div>
@@ -177,19 +173,14 @@ $resetEmail = $_SESSION['reset_email'];
             // Update requirement indicators
             Object.keys(requirements).forEach(req => {
                 const element = document.getElementById(`req-${req}`);
-                const icon = element.querySelector('i');
                 
                 if (requirements[req]) {
                     element.classList.remove('unmet');
                     element.classList.add('met');
-                    icon.classList.remove('fa-times');
-                    icon.classList.add('fa-check');
                     strength++;
                 } else {
                     element.classList.remove('met');
                     element.classList.add('unmet');
-                    icon.classList.remove('fa-check');
-                    icon.classList.add('fa-times');
                 }
             });
             

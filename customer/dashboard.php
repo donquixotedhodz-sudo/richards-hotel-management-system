@@ -5,7 +5,26 @@ require_once '../config/database.php';
 // Require customer authentication
 SessionManager::requireCustomer();
 
-$currentUser = SessionManager::getCurrentUser();
+$sessionUser = SessionManager::getCurrentUser();
+
+// Fetch complete user data from database
+try {
+    $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
+    $stmt->execute([$sessionUser['id']]);
+    $currentUser = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$currentUser) {
+        // Fallback to session data if database fetch fails
+        $currentUser = $sessionUser;
+    } else {
+        // Combine first_name and last_name into name for compatibility
+        $currentUser['name'] = trim($currentUser['first_name'] . ' ' . $currentUser['last_name']);
+    }
+} catch (Exception $e) {
+    // Fallback to session data if database error occurs
+    $currentUser = $sessionUser;
+}
+
 $page_title = 'Customer Dashboard';
 $additional_css = ['css/dashboard.css'];
 
@@ -161,7 +180,7 @@ $totalSpent = $stmt->fetch(PDO::FETCH_ASSOC)['total_spent'] ?? 0;
                                         </table>
                                     </div>
                                     <div class="text-center mt-3">
-                                        <a href="#" onclick="showSection('bookings')" class="btn btn-outline-primary btn-sm">
+                                        <a href="bookings.php" class="btn btn-outline-primary btn-sm">
                                             <i class="fas fa-list me-1"></i>View All Bookings
                                         </a>
                                     </div>
@@ -183,165 +202,7 @@ $totalSpent = $stmt->fetch(PDO::FETCH_ASSOC)['total_spent'] ?? 0;
             </div>
          </div>
         
-        <!-- My Bookings Section -->
-        <div id="bookings-section" class="content-section" style="display: none;">
-            <div class="content-header">
-                <h2 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>My Bookings</h2>
-                <p class="text-muted mb-0">View and manage all your bookings</p>
-            </div>
-            
-            <div class="content-body">
-                <?php
-                // Fetch all bookings for current user - match by user_id OR email for legacy bookings
-                $allBookingsQuery = "SELECT b.*, rt.type_name, rt.description as room_description 
-                                   FROM bookings b 
-                                   LEFT JOIN room_types rt ON b.room_type_id = rt.id 
-                                   WHERE b.user_id = ? OR b.customer_email = ? 
-                                   ORDER BY b.created_at DESC";
-                $allBookingsStmt = $conn->prepare($allBookingsQuery);
-                $allBookingsStmt->execute([$userId, $currentUser['email']]);
-                $allBookings = $allBookingsStmt->fetchAll(PDO::FETCH_ASSOC);
-                
-                if (count($allBookings) > 0): ?>
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0"><i class="fas fa-list me-2"></i>All Bookings (<?php echo count($allBookings); ?>)</h5>
-                            <div class="btn-group" role="group">
-                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="filterBookings('all')">All</button>
-                                <button type="button" class="btn btn-outline-warning btn-sm" onclick="filterBookings('pending')">Pending</button>
-                                <button type="button" class="btn btn-outline-success btn-sm" onclick="filterBookings('confirmed')">Confirmed</button>
-                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="filterBookings('cancelled')">Cancelled</button>
-                            </div>
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Booking ID</th>
-                                            <th>Room Type</th>
-                                            <th>Check-in</th>
-                                            <th>Check-out</th>
-                                            <th>Duration</th>
-                                            <th>Status</th>
-                                            <th>Payment</th>
-                                            <th>Total</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($allBookings as $booking): ?>
-                                            <tr class="booking-row" data-status="<?php echo strtolower($booking['booking_status']); ?>">
-                                                <td>
-                                                    <strong>#<?php echo str_pad($booking['id'], 4, '0', STR_PAD_LEFT); ?></strong>
-                                                    <br><small class="text-muted"><?php echo date('M j, Y', strtotime($booking['created_at'])); ?></small>
-                                                </td>
-                                                <td>
-                                                    <strong><?php echo htmlspecialchars($booking['type_name'] ?? 'N/A'); ?></strong>
-                                                    <?php if ($booking['room_description']): ?>
-                                                        <br><small class="text-muted"><?php echo htmlspecialchars(substr($booking['room_description'], 0, 50)) . '...'; ?></small>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td>
-                                                    <strong><?php echo date('M j, Y', strtotime($booking['check_in_datetime'])); ?></strong>
-                                                    <br><small class="text-muted"><?php echo date('g:i A', strtotime($booking['check_in_datetime'])); ?></small>
-                                                </td>
-                                                <td>
-                                                    <strong><?php echo date('M j, Y', strtotime($booking['check_out_datetime'])); ?></strong>
-                                                    <br><small class="text-muted"><?php echo date('g:i A', strtotime($booking['check_out_datetime'])); ?></small>
-                                                </td>
-                                                <td>
-                                                    <span class="badge bg-info"><?php echo $booking['duration_hours']; ?> hours</span>
-                                                </td>
-                                                <td>
-                                                    <?php
-                                                    $statusClass = '';
-                                                    switch(strtolower($booking['booking_status'])) {
-                                                        case 'pending':
-                                                            $statusClass = 'bg-warning';
-                                                            break;
-                                                        case 'confirmed':
-                                                            $statusClass = 'bg-success';
-                                                            break;
-                                                        case 'checked_in':
-                                                            $statusClass = 'bg-primary';
-                                                            break;
-                                                        case 'checked_out':
-                                                            $statusClass = 'bg-secondary';
-                                                            break;
-                                                        case 'cancelled':
-                                                            $statusClass = 'bg-danger';
-                                                            break;
-                                                        default:
-                                                            $statusClass = 'bg-secondary';
-                                                    }
-                                                    ?>
-                                                    <span class="badge <?php echo $statusClass; ?>">
-                                                        <?php echo ucfirst($booking['booking_status']); ?>
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <?php
-                                                    $paymentClass = '';
-                                                    switch(strtolower($booking['payment_status'])) {
-                                                        case 'pending':
-                                                            $paymentClass = 'bg-warning';
-                                                            break;
-                                                        case 'paid':
-                                                            $paymentClass = 'bg-success';
-                                                            break;
-                                                        case 'refunded':
-                                                            $paymentClass = 'bg-info';
-                                                            break;
-                                                        default:
-                                                            $paymentClass = 'bg-secondary';
-                                                    }
-                                                    ?>
-                                                    <span class="badge <?php echo $paymentClass; ?>">
-                                                        <?php echo ucfirst($booking['payment_status']); ?>
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <strong>₱<?php echo number_format($booking['total_price'], 2); ?></strong>
-                                                </td>
-                                                <td>
-                                                    <div class="btn-group" role="group">
-                                                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="viewBookingDetails(<?php echo $booking['id']; ?>)" title="View Details">
-                                                            <i class="fas fa-eye"></i>
-                                                        </button>
-                                                        <?php if (in_array(strtolower($booking['booking_status']), ['confirmed', 'checked_in'])): ?>
-                                                            <button type="button" class="btn btn-outline-success btn-sm" onclick="showExtendTimeModal(<?php echo $booking['id']; ?>)" title="Extend Time">
-                                                                <i class="fas fa-clock"></i>
-                                                            </button>
-                                                        <?php endif; ?>
-                                                        <?php if (strtolower($booking['booking_status']) === 'pending'): ?>
-                                                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="cancelBooking(<?php echo $booking['id']; ?>)" title="Cancel Booking">
-                                                                <i class="fas fa-times"></i>
-                                                            </button>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                <?php else: ?>
-                    <div class="card">
-                        <div class="card-body text-center py-5">
-                            <i class="fas fa-calendar-times fa-4x text-muted mb-4"></i>
-                            <h4 class="text-muted mb-3">No Bookings Found</h4>
-                            <p class="text-muted mb-4">You haven't made any bookings yet. Start by making your first reservation!</p>
-                            <a href="../index.php" class="btn btn-primary">
-                                <i class="fas fa-plus me-2"></i>Make Your First Booking
-                            </a>
-                        </div>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
+
         
         <!-- Profile Section -->
         <div id="profile-section" class="content-section" style="display: none;">
@@ -473,35 +334,7 @@ $totalSpent = $stmt->fetch(PDO::FETCH_ASSOC)['total_spent'] ?? 0;
         </div>
 </div>
 
-    <!-- Extend Time Modal -->
-    <div class="modal fade" id="extendTimeModal" tabindex="-1" aria-labelledby="extendTimeModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="extendTimeModalLabel">
-                        <i class="fas fa-clock me-2"></i>Extend Booking Time
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="extendTimeContent">
-                        <div class="text-center">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <p class="mt-2">Loading booking details...</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-success" id="confirmExtendBtn" onclick="confirmTimeExtension()" disabled>
-                        <i class="fas fa-check me-2"></i>Extend Time
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Booking Details Modal -->
     <div class="modal fade" id="bookingDetailsModal" tabindex="-1" aria-labelledby="bookingDetailsModalLabel" aria-hidden="true">
@@ -526,9 +359,6 @@ $totalSpent = $stmt->fetch(PDO::FETCH_ASSOC)['total_spent'] ?? 0;
      
      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
      <script>
-         let currentBookingId = null;
-         let currentBookingData = null;
-
          function showSection(sectionName) {
              // Hide all sections
              document.querySelectorAll('.content-section').forEach(section => {
@@ -551,244 +381,7 @@ $totalSpent = $stmt->fetch(PDO::FETCH_ASSOC)['total_spent'] ?? 0;
              document.getElementById('sidebar').classList.toggle('show');
          }
          
-         // Filter bookings by status
-         function filterBookings(status) {
-             const rows = document.querySelectorAll('.booking-row');
-             const buttons = document.querySelectorAll('.btn-group button');
-             
-             // Remove active class from all buttons
-             buttons.forEach(btn => btn.classList.remove('active'));
-             
-             // Add active class to clicked button
-             event.target.classList.add('active');
-             
-             // Show/hide rows based on status
-             rows.forEach(row => {
-                 if (status === 'all' || row.dataset.status === status) {
-                     row.style.display = '';
-                 } else {
-                     row.style.display = 'none';
-                 }
-             });
-         }
-         
-         // Show extend time modal
-         function showExtendTimeModal(bookingId) {
-             currentBookingId = bookingId;
-             
-             // Reset modal content
-             document.getElementById('extendTimeContent').innerHTML = `
-                 <div class="text-center">
-                     <div class="spinner-border text-primary" role="status">
-                         <span class="visually-hidden">Loading...</span>
-                     </div>
-                     <p class="mt-2">Loading booking details...</p>
-                 </div>
-             `;
-             document.getElementById('confirmExtendBtn').disabled = true;
-             
-             // Show modal
-             const modal = new bootstrap.Modal(document.getElementById('extendTimeModal'));
-             modal.show();
-             
-             // Load booking details
-             fetch(`controller/TimeExtensionController.php?action=get_booking&booking_id=${bookingId}`)
-                 .then(response => response.json())
-                 .then(data => {
-                     if (data.success) {
-                         currentBookingData = data.data;
-                         displayExtendTimeForm(data.data);
-                     } else {
-                         document.getElementById('extendTimeContent').innerHTML = `
-                             <div class="alert alert-danger">
-                                 <i class="fas fa-exclamation-triangle me-2"></i>
-                                 ${data.message}
-                             </div>
-                         `;
-                     }
-                 })
-                 .catch(error => {
-                     console.error('Error:', error);
-                     document.getElementById('extendTimeContent').innerHTML = `
-                         <div class="alert alert-danger">
-                             <i class="fas fa-exclamation-triangle me-2"></i>
-                             Error loading booking details. Please try again.
-                         </div>
-                     `;
-                 });
-         }
 
-         // Display extend time form
-         function displayExtendTimeForm(booking) {
-             const checkOutDate = new Date(booking.check_out_datetime);
-             const formattedCheckOut = checkOutDate.toLocaleDateString('en-US', {
-                 year: 'numeric',
-                 month: 'long',
-                 day: 'numeric',
-                 hour: '2-digit',
-                 minute: '2-digit'
-             });
-
-             document.getElementById('extendTimeContent').innerHTML = `
-                 <div class="row">
-                     <div class="col-12">
-                         <div class="card bg-light">
-                             <div class="card-body">
-                                 <h6 class="card-title">Booking #${String(booking.id).padStart(4, '0')}</h6>
-                                 <div class="row">
-                                     <div class="col-md-6">
-                                         <p class="mb-1"><strong>Room Type:</strong> ${booking.type_name}</p>
-                                         <p class="mb-1"><strong>Current Duration:</strong> ${booking.duration_hours} hours</p>
-                                     </div>
-                                     <div class="col-md-6">
-                                         <p class="mb-1"><strong>Current Total:</strong> ₱${parseFloat(booking.total_price).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
-                                         <p class="mb-1"><strong>Current Check-out:</strong> ${formattedCheckOut}</p>
-                                     </div>
-                                 </div>
-                             </div>
-                         </div>
-                     </div>
-                 </div>
-                 
-                 <div class="mt-4">
-                     <label for="additionalHours" class="form-label">
-                         <strong>Additional Hours</strong>
-                         <small class="text-muted">(₱200 per hour)</small>
-                     </label>
-                     <select class="form-select" id="additionalHours" onchange="calculateExtensionCost()">
-                         <option value="">Select additional hours...</option>
-                         <option value="1">1 hour (+₱200)</option>
-                         <option value="2">2 hours (+₱400)</option>
-                         <option value="3">3 hours (+₱600)</option>
-                         <option value="4">4 hours (+₱800)</option>
-                         <option value="5">5 hours (+₱1,000)</option>
-                         <option value="6">6 hours (+₱1,200)</option>
-                         <option value="8">8 hours (+₱1,600)</option>
-                         <option value="12">12 hours (+₱2,400)</option>
-                     </select>
-                 </div>
-                 
-                 <div id="extensionSummary" class="mt-4" style="display: none;">
-                     <div class="card border-success">
-                         <div class="card-header bg-success text-white">
-                             <h6 class="mb-0"><i class="fas fa-calculator me-2"></i>Extension Summary</h6>
-                         </div>
-                         <div class="card-body">
-                             <div class="row">
-                                 <div class="col-md-6">
-                                     <p class="mb-1"><strong>Additional Hours:</strong> <span id="summaryHours">-</span></p>
-                                     <p class="mb-1"><strong>Additional Cost:</strong> <span id="summaryAdditionalCost">-</span></p>
-                                 </div>
-                                 <div class="col-md-6">
-                                     <p class="mb-1"><strong>New Total Duration:</strong> <span id="summaryNewDuration">-</span></p>
-                                     <p class="mb-1"><strong>New Total Cost:</strong> <span id="summaryNewTotal">-</span></p>
-                                 </div>
-                             </div>
-                             <hr>
-                             <p class="mb-0"><strong>New Check-out Time:</strong> <span id="summaryNewCheckout">-</span></p>
-                         </div>
-                     </div>
-                 </div>
-             `;
-             
-             document.getElementById('confirmExtendBtn').disabled = true;
-         }
-
-         // Calculate extension cost
-         function calculateExtensionCost() {
-             const additionalHours = parseInt(document.getElementById('additionalHours').value);
-             
-             if (!additionalHours || !currentBookingData) {
-                 document.getElementById('extensionSummary').style.display = 'none';
-                 document.getElementById('confirmExtendBtn').disabled = true;
-                 return;
-             }
-             
-             const hourlyRate = 200;
-             const additionalCost = additionalHours * hourlyRate;
-             const newDuration = currentBookingData.duration_hours + additionalHours;
-             const newTotal = parseFloat(currentBookingData.total_price) + additionalCost;
-             
-             // Calculate new checkout time
-             const currentCheckOut = new Date(currentBookingData.check_out_datetime);
-             const newCheckOut = new Date(currentCheckOut.getTime() + (additionalHours * 60 * 60 * 1000));
-             const formattedNewCheckOut = newCheckOut.toLocaleDateString('en-US', {
-                 year: 'numeric',
-                 month: 'long',
-                 day: 'numeric',
-                 hour: '2-digit',
-                 minute: '2-digit'
-             });
-             
-             // Update summary
-             document.getElementById('summaryHours').textContent = additionalHours + ' hours';
-             document.getElementById('summaryAdditionalCost').textContent = '₱' + additionalCost.toLocaleString('en-US', {minimumFractionDigits: 2});
-             document.getElementById('summaryNewDuration').textContent = newDuration + ' hours';
-             document.getElementById('summaryNewTotal').textContent = '₱' + newTotal.toLocaleString('en-US', {minimumFractionDigits: 2});
-             document.getElementById('summaryNewCheckout').textContent = formattedNewCheckOut;
-             
-             // Show summary and enable button
-             document.getElementById('extensionSummary').style.display = 'block';
-             document.getElementById('confirmExtendBtn').disabled = false;
-         }
-
-         // Confirm time extension
-         function confirmTimeExtension() {
-             const additionalHours = parseInt(document.getElementById('additionalHours').value);
-             
-             if (!additionalHours || !currentBookingId) {
-                 alert('Please select additional hours');
-                 return;
-             }
-             
-             // Disable button and show loading
-             const confirmBtn = document.getElementById('confirmExtendBtn');
-             const originalText = confirmBtn.innerHTML;
-             confirmBtn.disabled = true;
-             confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
-             
-             // Submit extension request
-             const formData = new FormData();
-             formData.append('booking_id', currentBookingId);
-             formData.append('additional_hours', additionalHours);
-             
-             fetch('controller/TimeExtensionController.php?action=extend', {
-                 method: 'POST',
-                 body: formData
-             })
-             .then(response => response.json())
-             .then(data => {
-                 if (data.success) {
-                     alert('Time extended successfully! Additional cost: ₱' + data.data.additional_cost.toLocaleString('en-US', {minimumFractionDigits: 2}));
-                     
-                     // Close modal and reload page
-                     bootstrap.Modal.getInstance(document.getElementById('extendTimeModal')).hide();
-                     window.location.reload();
-                 } else {
-                     alert('Error: ' + data.message);
-                     confirmBtn.disabled = false;
-                     confirmBtn.innerHTML = originalText;
-                 }
-             })
-             .catch(error => {
-                 console.error('Error:', error);
-                 alert('An error occurred while extending time. Please try again.');
-                 confirmBtn.disabled = false;
-                 confirmBtn.innerHTML = originalText;
-             });
-         }
-         
-         // View booking details (placeholder function)
-         function viewBookingDetails(bookingId) {
-             alert('Viewing details for booking #' + bookingId + '\n\nThis feature will be implemented in a future update.');
-         }
-         
-         // Cancel booking (placeholder function)
-         function cancelBooking(bookingId) {
-             if (confirm('Are you sure you want to cancel booking #' + bookingId + '?\n\nThis action cannot be undone.')) {
-                 alert('Booking cancellation feature will be implemented in a future update.');
-             }
-         }
          
          // Profile form functions
          function resetProfileForm() {

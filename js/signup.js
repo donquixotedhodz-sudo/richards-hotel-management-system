@@ -286,54 +286,5 @@ document.addEventListener('DOMContentLoaded', function() {
         alertContainer.innerHTML = '';
     }
     
-    // Real-time password validation
-    const passwordField = document.getElementById('password');
-    const confirmPasswordField = document.getElementById('confirm_password');
-    
-    if (passwordField) {
-        passwordField.addEventListener('input', function() {
-            validatePasswordStrength(this.value);
-        });
-    }
-    
-    if (confirmPasswordField) {
-        confirmPasswordField.addEventListener('input', function() {
-            validatePasswordMatch();
-        });
-    }
-    
-    function validatePasswordStrength(password) {
-        const field = passwordField;
-        
-        if (password.length === 0) {
-            field.classList.remove('is-valid', 'is-invalid');
-            return;
-        }
-        
-        if (password.length >= 6) {
-            field.classList.remove('is-invalid');
-            field.classList.add('is-valid');
-        } else {
-            field.classList.remove('is-valid');
-            field.classList.add('is-invalid');
-        }
-    }
-    
-    function validatePasswordMatch() {
-        const password = passwordField.value;
-        const confirmPassword = confirmPasswordField.value;
-        
-        if (confirmPassword.length === 0) {
-            confirmPasswordField.classList.remove('is-valid', 'is-invalid');
-            return;
-        }
-        
-        if (password === confirmPassword) {
-            confirmPasswordField.classList.remove('is-invalid');
-            confirmPasswordField.classList.add('is-valid');
-        } else {
-            confirmPasswordField.classList.remove('is-valid');
-            confirmPasswordField.classList.add('is-invalid');
-        }
-    }
+    // Password validation removed - only basic form validation remains
 });

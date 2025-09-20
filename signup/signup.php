@@ -105,20 +105,30 @@ $message = $_GET['message'] ?? '';
                         </label>
                     </div>
                     
-                    <div class="form-floating mb-3">
+                    <div class="form-floating mb-3 position-relative">
                         <input type="password" class="form-control" id="password" name="password" 
                                placeholder="Password" required>
                         <label for="password">
                             <i class="fas fa-lock me-2"></i>Password
                         </label>
+                        
+                        <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-3 p-0 border-0 d-none" 
+                                onclick="togglePassword('password', 'passwordIcon')" style="z-index: 10; background: none;" id="passwordToggleBtn">
+                            <i class="fas fa-eye text-muted" id="passwordIcon"></i>
+                        </button>
                     </div>
                     
-                    <div class="form-floating mb-3">
+                    <div class="form-floating mb-3 position-relative">
                         <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
                                placeholder="Confirm Password" required>
                         <label for="confirm_password">
                             <i class="fas fa-lock me-2"></i>Confirm Password
                         </label>
+                        
+                        <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-3 p-0 border-0 d-none" 
+                                onclick="togglePassword('confirm_password', 'confirmPasswordIcon')" style="z-index: 10; background: none;" id="confirmPasswordToggleBtn">
+                            <i class="fas fa-eye text-muted" id="confirmPasswordIcon"></i>
+                        </button>
                     </div>
                     
                     <div class="form-check mb-3">
@@ -190,5 +200,43 @@ $message = $_GET['message'] ?? '';
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../js/signup.js"></script>
+    <script>
+        function togglePassword(inputId, iconId) {
+            const passwordField = document.getElementById(inputId);
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+            } else {
+                passwordField.type = 'password';
+            }
+        }
+         
+         // Show/hide password toggle buttons based on input
+         document.getElementById('password').addEventListener('input', function() {
+             const passwordToggleBtn = document.getElementById('passwordToggleBtn');
+             const passwordField = document.getElementById('password');
+             
+             if (this.value.length > 0) {
+                 passwordToggleBtn.classList.remove('d-none');
+             } else {
+                 passwordToggleBtn.classList.add('d-none');
+                 // Reset password field to hidden when empty
+                 passwordField.type = 'password';
+             }
+         });
+         
+         document.getElementById('confirm_password').addEventListener('input', function() {
+             const confirmPasswordToggleBtn = document.getElementById('confirmPasswordToggleBtn');
+             const confirmPasswordField = document.getElementById('confirm_password');
+             
+             if (this.value.length > 0) {
+                 confirmPasswordToggleBtn.classList.remove('d-none');
+             } else {
+                 confirmPasswordToggleBtn.classList.add('d-none');
+                 // Reset confirm password field to hidden when empty
+                 confirmPasswordField.type = 'password';
+             }
+         });
+    </script>
 </body>
 </html>

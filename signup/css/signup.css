@@ -305,48 +305,9 @@ body {
     }
 }
 
-/* Password strength indicator */
-.password-strength {
-    margin-top: 0.5rem;
-    font-size: 0.8rem;
-}
+/* Password strength indicator removed - no visual strength feedback */
 
-.strength-weak {
-    color: #dc3545;
-}
-
-.strength-medium {
-    color: #ffc107;
-}
-
-.strength-strong {
-    color: #28a745;
-}
-
-/* Form validation styles */
-.is-invalid {
-    border-color: #dc3545 !important;
-}
-
-.is-valid {
-    border-color: #28a745 !important;
-}
-
-.invalid-feedback {
-    display: block;
-    width: 100%;
-    margin-top: 0.25rem;
-    font-size: 0.875rem;
-    color: #dc3545;
-}
-
-.valid-feedback {
-    display: block;
-    width: 100%;
-    margin-top: 0.25rem;
-    font-size: 0.875rem;
-    color: #28a745;
-}
+/* Form validation styles removed - no visual validation feedback */
 
 /* Custom scrollbar styling */
 .signup-body::-webkit-scrollbar {

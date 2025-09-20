@@ -10,9 +10,10 @@
 
 .nav-link:hover,
 .nav-link.active {
-    color: white;
-    background: rgba(255, 255, 255, 0.1);
+    color: white !important;
+    background: rgba(255, 255, 255, 0);
     border-left-color: white;
+    font-weight: 500;
 }
 
 .nav-link i {

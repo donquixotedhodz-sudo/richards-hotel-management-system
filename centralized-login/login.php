@@ -83,13 +83,18 @@ $message = $_GET['message'] ?? '';
                         </label>
                     </div>
                     
-                    <div class="form-floating mb-3">
+                    <div class="form-floating mb-3 position-relative">
                          <input type="password" class="form-control" id="password" name="password" 
                                    placeholder="Password" required>
                         
                         <label for="password">
                             <i class="fas fa-lock me-2"></i>Password
                         </label>
+                        
+                        <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-3 p-0 border-0 d-none" 
+                                onclick="togglePassword()" style="z-index: 10; background: none;" id="passwordToggleBtn">
+                            <i class="fas fa-eye text-muted" id="passwordIcon"></i>
+                        </button>
                     </div>
                     
                     <div class="d-flex justify-content-end mb-3">
@@ -121,17 +126,12 @@ $message = $_GET['message'] ?? '';
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function togglePassword() {
-            const passwordInput = document.getElementById('password');
-            const passwordIcon = document.getElementById('passwordIcon');
+            const passwordField = document.getElementById('password');
             
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                passwordIcon.classList.remove('fa-eye');
-                passwordIcon.classList.add('fa-eye-slash');
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
             } else {
-                passwordInput.type = 'password';
-                passwordIcon.classList.remove('fa-eye-slash');
-                passwordIcon.classList.add('fa-eye');
+                passwordField.type = 'password';
             }
         }
         
@@ -144,6 +144,20 @@ $message = $_GET['message'] ?? '';
                 e.preventDefault();
                 alert('Please fill in all fields');
                 return false;
+            }
+        });
+        
+        // Show/hide password toggle icon based on input
+        document.getElementById('password').addEventListener('input', function() {
+            const passwordToggleBtn = document.getElementById('passwordToggleBtn');
+            const passwordField = document.getElementById('password');
+            
+            if (this.value.length > 0) {
+                passwordToggleBtn.classList.remove('d-none');
+            } else {
+                passwordToggleBtn.classList.add('d-none');
+                // Reset password field to hidden when empty
+                passwordField.type = 'password';
             }
         });
     </script>

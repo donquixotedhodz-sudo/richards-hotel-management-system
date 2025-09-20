@@ -208,6 +208,106 @@ html {
     box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
 }
 
+/* Action buttons styling */
+.table .btn {
+    border-width: 2px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.table .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* Colored borders for different button types */
+.btn-primary {
+    border-color: #0d6efd !important;
+    background-color: #0d6efd !important;
+    color: white !important;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7 !important;
+    border-color: #0b5ed7 !important;
+}
+
+.btn-warning {
+    border-color: #ffc107 !important;
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+}
+.btn-warning-1 {
+    border-color: #0d6efd !important;
+    background-color: #0d6efd !important;
+    color: white !important;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800 !important;
+    border-color: #e0a800 !important;
+}
+
+.btn-success {
+    border-color: #198754 !important;
+    background-color: #198754 !important;
+    color: white !important;
+}
+
+.btn-success:hover {
+    background-color: #157347 !important;
+    border-color: #157347 !important;
+}
+
+.btn-danger {
+    border-color: #dc3545 !important;
+    background-color: #dc3545 !important;
+    color: white !important;
+}
+
+.btn-danger:hover {
+    background-color: #b02a37 !important;
+    border-color: #b02a37 !important;
+}
+
+/* Table actions column styling */
+.table td:last-child {
+    white-space: nowrap;
+    width: 1%;
+}
+
+/* Square button styling */
+.square-btn {
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 4px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
+    min-height: 32px !important;
+    max-height: 32px !important;
+}
+
+.btn-xs {
+    font-size: 0.75rem !important;
+}
+
+.square-btn i {
+    font-size: 0.75rem !important;
+    line-height: 1 !important;
+}
+
+.btn-outline-light:hover {
+    background: var(--light-color);
+    color: var(--dark-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+}
+
 /* Card Styles */
 .card {
     transition: var(--transition);
