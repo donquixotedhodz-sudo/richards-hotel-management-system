@@ -200,6 +200,10 @@ $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0"><i class="fas fa-list me-2"></i>All Bookings</h5>
                         <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-primary btn-sm btn-rect d-inline-flex align-items-center" onclick="openPrintReport()" title="Print detailed report">
+                                <i class="fas fa-print me-2"></i>
+                                <span>Print</span>
+                            </button>
                             <select class="form-select form-select-sm" onchange="changeStatus(this.value)" style="width: auto;">
                                 <option value="" <?php echo ($status_filter == '') ? 'selected' : ''; ?>>All Status</option>
                                 <option value="pending" <?php echo ($status_filter == 'pending') ? 'selected' : ''; ?>>Pending</option>
@@ -803,6 +807,11 @@ function toggleSidebar() {
     
     sidebar.classList.toggle('collapsed');
     mainContent.classList.toggle('expanded');
+}
+
+// Open print-friendly detailed report of all bookings
+function openPrintReport() {
+    window.open('bookings_report_print.php', '_blank');
 }
 
 

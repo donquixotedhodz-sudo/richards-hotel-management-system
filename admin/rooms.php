@@ -142,38 +142,38 @@ $additional_css = ['css/dashboard.css'];
                     const stats = data.stats;
                     document.getElementById('roomStats').innerHTML = `
                         <div class="col-md-3">
-                            <div class="card text-center">
+                            <div class="card text-center bg-primary text-white">
                                 <div class="card-body">
-                                    <i class="fas fa-bed fa-2x text-primary mb-2"></i>
+                                    <i class="fas fa-bed fa-2x text-white mb-2"></i>
                                     <h4>${stats.total_rooms}</h4>
-                                    <p class="text-muted">Total Rooms</p>
+                                    <p>Total Rooms</p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card text-center">
+                            <div class="card text-center bg-success text-white">
                                 <div class="card-body">
-                                    <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                    <i class="fas fa-check-circle fa-2x text-white mb-2"></i>
                                     <h4>${stats.available_rooms}</h4>
-                                    <p class="text-muted">Available</p>
+                                    <p>Available</p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card text-center">
+                            <div class="card text-center bg-danger text-white">
                                 <div class="card-body">
-                                    <i class="fas fa-user fa-2x text-danger mb-2"></i>
+                                    <i class="fas fa-user fa-2x text-white mb-2"></i>
                                     <h4>${stats.occupied_rooms}</h4>
-                                    <p class="text-muted">Occupied</p>
+                                    <p>Occupied</p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card text-center">
+                            <div class="card text-center bg-warning text-dark">
                                 <div class="card-body">
-                                    <i class="fas fa-tools fa-2x text-warning mb-2"></i>
+                                    <i class="fas fa-tools fa-2x text-dark mb-2"></i>
                                     <h4>${stats.maintenance_rooms + stats.out_of_order_rooms}</h4>
-                                    <p class="text-muted">Maintenance</p>
+                                    <p>Maintenance</p>
                                 </div>
                             </div>
                         </div>
@@ -229,15 +229,17 @@ $additional_css = ['css/dashboard.css'];
                                 <td><span class="status-badge ${statusClass}">${room.status.charAt(0).toUpperCase() + room.status.slice(1).replace('_', ' ')}</span></td>
                                 <td>${new Date(room.created_at).toLocaleDateString()}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="viewRoomDetails(${room.id})" title="View Details">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-success me-1" onclick="editRoom(${room.id})" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteRoom(${room.id})" title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    <div class="d-flex justify-content-end gap-1">
+                                        <button class="btn btn-primary btn-xs square-btn border-2" onclick="viewRoomDetails(${room.id})" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-warning btn-xs square-btn border-2" onclick="editRoom(${room.id})" title="Edit Room">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-danger btn-xs square-btn border-2" onclick="deleteRoom(${room.id})" title="Delete Room">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         `;

@@ -51,7 +51,7 @@ if (isset($_SESSION['user_id'])) {
     <!-- Navigation Header -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top" style="min-height: 80px; padding: 1rem 0;">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="../index.php">
+            <a class="navbar-brand fw-bold mx-auto d-flex align-items-center justify-content-center" href="../index.php">
                 <img src="../images/logo/logo.png" alt="Richards Hotel" height="40" class="me-2">
                 Richards Hotel - Admin
             </a>
@@ -68,10 +68,7 @@ if (isset($_SESSION['user_id'])) {
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <span class="navbar-text me-3">
-                            <i class="fas fa-user-shield me-1"></i>
-                            Welcome, <?php echo htmlspecialchars($currentUser['name'] ?? 'Admin User'); ?>
-                        </span>
+                        
                     </li>
 
                 </ul>

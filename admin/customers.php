@@ -62,12 +62,14 @@ $customers = $customerController->getAllCustomers();
                                                     <td><?php echo htmlspecialchars($customer['email']); ?></td>
                                                     <td><?php echo htmlspecialchars($customer['phone']); ?></td>
                                                     <td>
-                                                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editCustomer(<?php echo $customer['id']; ?>)" title="Edit">
-                                                            <i class="fas fa-edit"></i>
-                                                        </button>
-                                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteCustomer(<?php echo $customer['id']; ?>)" title="Delete">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
+                                                        <div class="d-flex justify-content-end gap-1">
+                                                            <button class="btn btn-warning btn-xs square-btn border-2" onclick="editCustomer(<?php echo $customer['id']; ?>)" title="Edit Customer">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                            <button class="btn btn-danger btn-xs square-btn border-2" onclick="deleteCustomer(<?php echo $customer['id']; ?>)" title="Delete Customer">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             <?php endforeach; ?>

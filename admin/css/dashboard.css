@@ -143,6 +143,11 @@ body {
     font-size: 0.875rem;
 }
 
+/* Utility: Rectangular buttons (no rounded corners) */
+.btn-rect {
+    border-radius: 0 !important;
+}
+
 /* Status Badges */
 .badge {
     font-size: 0.75rem;
