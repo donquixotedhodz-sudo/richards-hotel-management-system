@@ -324,6 +324,11 @@ $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
                                             <button onclick="editBooking(<?php echo $booking['id']; ?>)" class="btn btn-warning btn-xs square-btn border-2" title="Edit Booking">
                                                 <i class="fas fa-edit"></i>
                                             </button>
+                                            <?php if (in_array(strtolower($booking['booking_status']), ['confirmed','checked_in'])): ?>
+                                                <button type="button" class="btn btn-success btn-xs square-btn border-2" onclick="showExtendTimeModal(<?php echo $booking['id']; ?>)" title="Extend Time">
+                                                    <i class="fas fa-clock"></i>
+                                                </button>
+                                            <?php endif; ?>
                                             <?php if ($booking['booking_status'] == 'pending'): ?>
                                                 <form method="POST" style="display: inline;">
                                                     <input type="hidden" name="booking_id" value="<?php echo $booking['id']; ?>">
@@ -454,6 +459,42 @@ $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
     </div>
 </div>
 
+
+<!-- Extend Time Modal -->
+<div class="modal fade" id="extendTimeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-clock me-2"></i>Extend Booking Time</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="extend_booking_id">
+                <div class="mb-3">
+                    <label class="form-label">Additional Hours <small class="text-muted">(₱200 per hour)</small></label>
+                    <select class="form-select" id="extend_hours">
+                        <option value="">Select additional hours...</option>
+                        <option value="1">1 hour (+₱200)</option>
+                        <option value="2">2 hours (+₱400)</option>
+                        <option value="3">3 hours (+₱600)</option>
+                        <option value="4">4 hours (+₱800)</option>
+                        <option value="5">5 hours (+₱1,000)</option>
+                        <option value="6">6 hours (+₱1,200)</option>
+                        <option value="8">8 hours (+₱1,600)</option>
+                        <option value="12">12 hours (+₱2,400)</option>
+                    </select>
+                </div>
+                <div class="alert alert-info" id="extendInfo" style="display:none;"></div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="processTimeExtension()">
+                    <i class="fas fa-check me-1"></i>Confirm Extension
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Notification Container -->
 <div id="notificationContainer" class="position-fixed top-0 end-0 p-3" style="z-index: 9999;">
@@ -632,63 +673,129 @@ function viewBookingDetails(bookingId) {
 }
 
 
-// Process time extension
-function processTimeExtension() {
+// Show extend time modal
+function showExtendTimeModal(bookingId) {
+    document.getElementById('extend_booking_id').value = bookingId;
+    document.getElementById('extend_hours').value = '';
+    const infoEl = document.getElementById('extendInfo');
+    if (infoEl) {
+        infoEl.style.display = 'none';
+        infoEl.textContent = '';
+    }
+    new bootstrap.Modal(document.getElementById('extendTimeModal')).show();
+}
+
+// Update info text when hours selection changes
+function updateExtendInfo() {
     const bookingId = document.getElementById('extend_booking_id').value;
-    const extendHours = document.getElementById('extend_hours').value;
-    
-    if (!extendHours || extendHours < 1 || extendHours > 24) {
-        showNotification('Please enter a valid number of hours (1-24)', 'error');
+    const hoursVal = document.getElementById('extend_hours').value;
+    const infoEl = document.getElementById('extendInfo');
+
+    if (!infoEl) return;
+
+    if (!hoursVal) {
+        infoEl.style.display = 'none';
+        infoEl.textContent = '';
         return;
     }
-    
-    // Add loading state to extend button
-    const extendBtn = document.querySelector('#extendTimeModal .btn-primary');
-    const originalText = extendBtn.innerHTML;
-    extendBtn.disabled = true;
-    extendBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Extending...';
-    
+
+    const hours = parseInt(hoursVal, 10);
+    const additionalCost = hours * 200;
+
+    if (!bookingId) {
+        infoEl.textContent = `Extending by ${hours} hours (+₱${additionalCost.toLocaleString()}).`;
+        infoEl.style.display = 'block';
+        return;
+    }
+
+    // Fetch current booking to compute new checkout
+    fetch(`controller/BookingController.php?action=get&id=${bookingId}`)
+        .then(r => r.json())
+        .then(d => {
+            let baseText = `Extending by ${hours} hours (+₱${additionalCost.toLocaleString()}).`;
+            if (d.success && d.booking && d.booking.check_out_datetime) {
+                const currentOut = d.booking.check_out_datetime;
+                const dt = new Date(currentOut.replace(' ', 'T'));
+                dt.setHours(dt.getHours() + hours);
+                const formatted = dt.toLocaleString(undefined, {
+                    year: 'numeric', month: 'short', day: 'numeric',
+                    hour: 'numeric', minute: '2-digit'
+                });
+                baseText += ` New checkout: ${formatted}`;
+            }
+            infoEl.textContent = baseText;
+            infoEl.style.display = 'block';
+        })
+        .catch(() => {
+            infoEl.textContent = `Extending by ${hours} hours (+₱${additionalCost.toLocaleString()}).`;
+            infoEl.style.display = 'block';
+        });
+}
+
+// Process time extension request
+function processTimeExtension() {
+    const bookingId = document.getElementById('extend_booking_id').value;
+    const hoursVal = document.getElementById('extend_hours').value;
+    const extendHours = parseInt(hoursVal, 10);
+
+    if (!bookingId || !extendHours) {
+        showNotification('Please select additional hours before confirming.', 'warning');
+        return;
+    }
+
+    // Button loading state
+    const confirmBtn = document.querySelector('#extendTimeModal .btn-primary');
+    const originalText = confirmBtn ? confirmBtn.innerHTML : '';
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    }
+
     fetch('controller/ExtendTimeController.php', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            booking_id: parseInt(bookingId),
-            extend_hours: parseInt(extendHours)
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking_id: parseInt(bookingId, 10), extend_hours: extendHours })
     })
-    .then(response => {
-        // Check if response is ok before parsing JSON
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
-        console.log('Response data:', data); // Debug log
-        if (data && data.success === true) {
-            showNotification(data.message || 'Booking extended successfully!', 'success');
-            // Close modal and reload immediately
-            bootstrap.Modal.getInstance(document.getElementById('extendTimeModal')).hide();
-            // Reload the page to show updated booking information
-            location.reload();
+        console.debug('ExtendTimeController response:', data);
+        const isSuccess = !!(data && (
+            data.success === true || data.success === 'true' || data.success === 1 ||
+            ('new_checkout' in data)
+        ));
+
+        if (isSuccess) {
+            const message = (data && data.message) ? data.message : 'Time extended successfully!';
+            showNotification(message, 'success');
+            const modalEl = document.getElementById('extendTimeModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+            setTimeout(() => { window.location.reload(); }, 1200);
         } else {
-            const errorMessage = data && data.message ? data.message : 'Unknown error occurred';
-            showNotification('Error extending booking: ' + errorMessage, 'error');
-            // Restore button state
-            extendBtn.disabled = false;
-            extendBtn.innerHTML = originalText;
+            const msg = (data && data.message) ? data.message : 'Failed to extend time';
+            showNotification('Error extending booking: ' + msg, 'error');
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = originalText;
+            }
         }
     })
     .catch(error => {
-        console.error('Fetch Error:', error);
-        showNotification('Network error: Unable to extend booking time', 'error');
-        // Restore button state
-        extendBtn.disabled = false;
-        extendBtn.innerHTML = originalText;
+        console.error('Error:', error);
+        showNotification('Error extending booking time', 'error');
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = originalText;
+        }
     });
 }
+
+// Attach change listener for hours selection
+const extendHoursEl = document.getElementById('extend_hours');
+if (extendHoursEl) {
+    extendHoursEl.addEventListener('change', updateExtendInfo);
+}
+
 
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');

@@ -92,30 +92,34 @@ class TimeExtensionController {
                 throw new Exception('Failed to update booking');
             }
             
-            // Log the extension for audit purposes
-            $logStmt = $this->conn->prepare("
-                INSERT INTO booking_extensions (
-                    booking_id, 
-                    user_id, 
-                    additional_hours, 
-                    additional_cost, 
-                    hourly_rate,
-                    previous_checkout, 
-                    new_checkout,
-                    extension_reason
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ");
-            
-            $logStmt->execute([
-                $bookingId, 
-                $currentUser['id'], 
-                $additionalHours, 
-                $additionalCost, 
-                $hourlyRate,
-                $booking['check_out_datetime'],
-                $newCheckOut->format('Y-m-d H:i:s'),
-                'Customer requested time extension'
-            ]);
+            // Log the extension for audit purposes (non-fatal if logging fails)
+            try {
+                $logStmt = $this->conn->prepare("
+                    INSERT INTO booking_extensions (
+                        booking_id, 
+                        user_id, 
+                        additional_hours, 
+                        additional_cost, 
+                        hourly_rate,
+                        previous_checkout, 
+                        new_checkout,
+                        extension_reason
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                
+                $logStmt->execute([
+                    $bookingId, 
+                    $currentUser['id'], 
+                    $additionalHours, 
+                    $additionalCost, 
+                    $hourlyRate,
+                    $booking['check_out_datetime'],
+                    $newCheckOut->format('Y-m-d H:i:s'),
+                    'Customer requested time extension'
+                ]);
+            } catch (Exception $logEx) {
+                error_log('Time extension log failed: ' . $logEx->getMessage());
+            }
             
             $this->returnResponse(true, 'Time extended successfully!', [
                 'additional_hours' => $additionalHours,
